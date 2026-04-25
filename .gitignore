@@ -7,3 +7,5 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
 VoiceInput.app/
+VoiceInput.app.zip
+dist/

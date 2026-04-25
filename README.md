@@ -34,15 +34,13 @@ Hold **Fn** to record; release to paste the final text into the currently focuse
 
 ## Direct Download / Use
 
-If you only want to try the app directly, download the packaged app archive from the repository root:
-
-```text
-VoiceInput.app.zip
-```
+If you only want to try the app directly, download the packaged app archive from
+the [GitHub Releases](https://github.com/perryyeh/macos-voicepinput/releases)
+page.
 
 Then:
 
-1. Download or clone `VoiceInput.app.zip`.
+1. Download `VoiceInput.app.zip` from the latest release.
 2. Unzip it.
 3. Move `VoiceInput.app` to `/Applications` or run it from the unzipped folder.
 4. On first run, grant Microphone, Speech Recognition, and Accessibility permissions.
