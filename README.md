@@ -47,6 +47,47 @@ Then:
 
 If macOS Gatekeeper blocks the ad-hoc signed app, right-click `VoiceInput.app` and choose **Open**, or allow it from System Settings → Privacy & Security.
 
+### Upgrading from an older build
+
+Use one stable app location, preferably `/Applications/VoiceInput.app`. Before replacing an older copy, quit the running app:
+
+```bash
+pkill -x VoiceInput || true
+```
+
+Then replace the app bundle and open the new copy from the same path:
+
+```bash
+open /Applications/VoiceInput.app
+```
+
+If Accessibility still shows VoiceInput as enabled in System Settings but the app reports that Accessibility is not trusted, the macOS TCC permission record is probably stale. This can happen with ad-hoc signed builds because every new build may have a different code hash, so the old Accessibility entry can remain visible while no longer matching the current app.
+
+Reset only VoiceInput's Accessibility permission and grant it again:
+
+```bash
+pkill -x VoiceInput || true
+tccutil reset Accessibility local.voiceinput.app
+open /Applications/VoiceInput.app
+```
+
+Then open:
+
+```text
+System Settings → Privacy & Security → Accessibility
+```
+
+Remove any old `VoiceInput` entries if present, add the current `/Applications/VoiceInput.app`, and turn it on again. Avoid keeping multiple copies such as both `~/Downloads/VoiceInput.app` and `/Applications/VoiceInput.app`, because macOS can show one copy as authorized while the running copy is a different app path/signature.
+
+### Signing and notarization status
+
+Release archives are currently ad-hoc signed, not Developer ID signed or notarized. This is acceptable for local/self use, but it has two side effects:
+
+1. GitHub/browser downloads may get a `com.apple.quarantine` flag and trigger Gatekeeper's "Apple could not verify" warning.
+2. Accessibility permission may need to be reset after upgrading if macOS keeps an old TCC record for a previous ad-hoc build.
+
+For stable public distribution, sign with an Apple Developer ID certificate and notarize the archive. A Developer ID signed and notarized build gives macOS a stable code identity and reduces both Gatekeeper warnings and stale Accessibility authorization problems.
+
 ## Build / Run
 
 ```bash
