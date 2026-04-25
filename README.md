@@ -17,6 +17,8 @@ Optional **OpenAI-compatible LLM refinement** conservatively fixes only obvious 
 
 Hold **Fn** to record; release to paste the final text into the currently focused input field. Use **Hotkey Settings…** to change the push-to-talk shortcut.
 
+![VoiceInput menu bar screenshot](docs/images/voiceinput-menu.jpg)
+
 ## Features
 
 - Menu-bar-only app (`LSUIElement`, no Dock icon).
