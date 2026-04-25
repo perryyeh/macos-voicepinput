@@ -4,7 +4,7 @@ import Carbon.HIToolbox
 public final class TextInjector {
     public init() {}
 
-    public func inject(_ text: String) {
+    public func inject(_ text: String, targetApplication: NSRunningApplication? = nil) {
         guard !text.isEmpty else { return }
         let originalItems = NSPasteboard.general.pasteboardItems ?? []
         let originalInput = InputSourceManager.currentInputSourceID()
@@ -16,7 +16,12 @@ public final class TextInjector {
         NSPasteboard.general.setString(text, forType: .string)
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            Self.sendCommandV()
+            if let targetApplication, !targetApplication.isTerminated {
+                targetApplication.activate(options: [])
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+                Self.sendCommandV()
+            }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                 if shouldSwitch, let originalInput { InputSourceManager.selectInputSource(identifier: originalInput) }
                 NSPasteboard.general.clearContents()

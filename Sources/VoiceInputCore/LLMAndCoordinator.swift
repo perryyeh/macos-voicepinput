@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Speech
 
@@ -60,6 +61,7 @@ public final class RecognitionCoordinator {
     private let injector: TextInjector
     private let panel: FloatingTranscriptionPanel
     private var activeBackends: [RecognitionBackend] = []
+    private var injectionTargetApplication: NSRunningApplication?
     private var settings: AppSettings { SettingsStore.shared.settings }
 
     public init(
@@ -78,12 +80,19 @@ public final class RecognitionCoordinator {
         self.llm = llm
         self.injector = injector
         self.panel = panel
-        self.appleSpeech.onPartialTranscript = { [weak panel] text in panel?.updateText(text) }
-        self.appleSpeech.onRMS = { [weak panel] rms in panel?.updateRMS(rms) }
-        self.audioRecorder.onRMS = { [weak panel] rms in panel?.updateRMS(rms) }
+        self.appleSpeech.onPartialTranscript = { [weak panel] text in
+            DispatchQueue.main.async { panel?.updateText(text) }
+        }
+        self.appleSpeech.onRMS = { [weak panel] rms in
+            DispatchQueue.main.async { panel?.updateRMS(rms) }
+        }
+        self.audioRecorder.onRMS = { [weak panel] rms in
+            DispatchQueue.main.async { panel?.updateRMS(rms) }
+        }
     }
 
     public func startRecording() {
+        injectionTargetApplication = NSWorkspace.shared.frontmostApplication
         panel.show(text: "Listening…")
         let backends = settings.effectiveRecognitionBackends
         activeBackends = backends
@@ -210,7 +219,8 @@ public final class RecognitionCoordinator {
 
     private func injectAndHide(_ text: String) {
         panel.updateText(text)
-        injector.inject(text)
+        injector.inject(text, targetApplication: injectionTargetApplication)
+        injectionTargetApplication = nil
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { self.panel.hideAnimated() }
     }
 

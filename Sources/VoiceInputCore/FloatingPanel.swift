@@ -5,6 +5,9 @@ public final class FloatingTranscriptionPanel: NSPanel {
     private let label = NSTextField(labelWithString: "Listening…")
     private var widthConstraint: NSLayoutConstraint?
 
+    public override var canBecomeKey: Bool { false }
+    public override var canBecomeMain: Bool { false }
+
     public init() {
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: 260, height: 56),
@@ -64,11 +67,15 @@ public final class FloatingTranscriptionPanel: NSPanel {
     }
 
     public func show(text: String = "Listening…") {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { self.show(text: text) }
+            return
+        }
         updateText(text)
         positionAtBottomCenter()
         alphaValue = 0
         setFrame(frame.insetBy(dx: 24, dy: 6), display: true)
-        makeKeyAndOrderFront(nil)
+        orderFrontRegardless()
         NSAnimationContext.runAnimationGroup { ctx in
             ctx.duration = 0.35
             ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
@@ -78,6 +85,10 @@ public final class FloatingTranscriptionPanel: NSPanel {
     }
 
     public func hideAnimated() {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { self.hideAnimated() }
+            return
+        }
         NSAnimationContext.runAnimationGroup { ctx in
             ctx.duration = 0.22
             ctx.timingFunction = CAMediaTimingFunction(name: .easeIn)
@@ -89,6 +100,10 @@ public final class FloatingTranscriptionPanel: NSPanel {
     }
 
     public func updateText(_ text: String) {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { self.updateText(text) }
+            return
+        }
         label.stringValue = text.isEmpty ? "Listening…" : text
         let measured = min(560, max(160, (text as NSString).size(withAttributes: [.font: label.font as Any]).width + 8))
         NSAnimationContext.runAnimationGroup { ctx in
@@ -100,6 +115,10 @@ public final class FloatingTranscriptionPanel: NSPanel {
     }
 
     public func updateRMS(_ rms: Float) {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { self.updateRMS(rms) }
+            return
+        }
         waveform.update(level: CGFloat(rms))
     }
 
