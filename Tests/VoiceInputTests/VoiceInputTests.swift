@@ -77,3 +77,8 @@ import Testing
     config.apiKey = "sk-test"
     #expect(config.isComplete)
 }
+
+@Test func textInjectorAppendsTrailingSpaceToRecognizedText() {
+    #expect(TextInjector.textForInsertion("你好") == "你好 ")
+    #expect(TextInjector.textForInsertion("hello ") == "hello ")
+}
