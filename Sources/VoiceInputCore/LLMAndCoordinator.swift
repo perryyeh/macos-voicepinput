@@ -60,6 +60,12 @@ public final class RecognitionCoordinator {
     private let llm: LLMRefiner
     private let injector: TextInjector
     private let panel: FloatingTranscriptionPanel
+    private enum RecordingState: String {
+        case idle
+        case recording
+        case finishing
+    }
+    private var recordingState: RecordingState = .idle
     private var activeBackends: [RecognitionBackend] = []
     private var injectionTargetApplication: NSRunningApplication?
     private var settings: AppSettings { SettingsStore.shared.settings }
@@ -92,6 +98,11 @@ public final class RecognitionCoordinator {
     }
 
     public func startRecording() {
+        guard recordingState == .idle else {
+            Logger.log("Recording start ignored because state=\(recordingState.rawValue)")
+            return
+        }
+        recordingState = .recording
         injectionTargetApplication = NSWorkspace.shared.frontmostApplication
         Logger.log("Recording start target=\(injectionTargetApplication.map { Logger.appDescription($0) } ?? "nil") settingsEngine=\(settings.recognitionEngine.rawValue) language=\(settings.language.rawValue) accessibilityTrusted=\(PermissionsHelper.accessibilityTrusted())")
         panel.show(text: "Listening…")
@@ -100,6 +111,7 @@ public final class RecognitionCoordinator {
         activeBackends = backends
         guard let first = backends.first else {
             Logger.log("Recording start aborted: no recognition backends")
+            recordingState = .idle
             panel.updateText("No local engine available")
             return
         }
@@ -109,6 +121,7 @@ public final class RecognitionCoordinator {
                 guard let self else { return }
                 Logger.log("Speech authorization checked ok=\(ok)")
                 guard ok else {
+                    self.recordingState = .idle
                     self.panel.updateText("Speech permission needed")
                     return
                 }
@@ -121,6 +134,8 @@ public final class RecognitionCoordinator {
                     if self.settings.recognitionEngine == .auto {
                         self.activeBackends = Array(backends.dropFirst())
                         self.tryRecorderFallbackStart()
+                    } else {
+                        self.recordingState = .idle
                     }
                 }
             }
@@ -130,10 +145,16 @@ public final class RecognitionCoordinator {
     }
 
     public func stopRecording() {
+        guard recordingState == .recording else {
+            Logger.log("Recording stop ignored because state=\(recordingState.rawValue)")
+            return
+        }
+        recordingState = .finishing
         Logger.log("Recording stop requested activeBackends=\(activeBackends.map(\.rawValue).joined(separator: ",")) target=\(injectionTargetApplication.map { Logger.appDescription($0) } ?? "nil")")
         panel.updateText("Transcribing…")
         let backends = activeBackends
         guard let first = backends.first else {
+            recordingState = .idle
             finish("")
             return
         }
@@ -160,6 +181,7 @@ public final class RecognitionCoordinator {
 
     public func cancel() {
         Logger.log("Recording cancelled")
+        recordingState = .idle
         appleSpeech.cancel()
         audioRecorder.cancel()
         panel.hideAnimated()
@@ -172,6 +194,7 @@ public final class RecognitionCoordinator {
             Logger.log("Recorder fallback started audioURL=\(audioRecorder.lastAudioFileURL?.path ?? "nil")")
         } catch {
             Logger.log("Audio recorder start failed: \(error)")
+            recordingState = .idle
             panel.updateText("Microphone unavailable")
         }
     }
@@ -213,7 +236,11 @@ public final class RecognitionCoordinator {
         Logger.log("Finish recognition rawLength=\(raw.count) trimmedLength=\(text.count) hasText=\(!text.isEmpty)")
         guard !text.isEmpty else {
             panel.updateText("No speech detected")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { self.panel.hideAnimated() }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                self.panel.hideAnimated()
+                self.recordingState = .idle
+                Logger.log("Recording state reset to idle after empty transcript")
+            }
             return
         }
         let current = SettingsStore.shared.settings
@@ -232,10 +259,15 @@ public final class RecognitionCoordinator {
 
     private func injectAndHide(_ text: String) {
         Logger.log("Inject and hide textLength=\(text.count) target=\(injectionTargetApplication.map { Logger.appDescription($0) } ?? "nil")")
-        panel.updateText(text)
-        injector.inject(text, targetApplication: injectionTargetApplication)
+        let target = injectionTargetApplication
         injectionTargetApplication = nil
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { self.panel.hideAnimated() }
+        panel.updateText(text)
+        injector.inject(text, targetApplication: target)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            self.panel.hideAnimated()
+            self.recordingState = .idle
+            Logger.log("Recording state reset to idle after injection")
+        }
     }
 
     private func requestSpeechAuthorizationIfNeeded(completion: @escaping (Bool) -> Void) {

@@ -14,10 +14,10 @@ public final class TextInjector {
             return
         }
         let insertionText = Self.textForInsertion(text)
-        let originalItems = NSPasteboard.general.pasteboardItems ?? []
+        let originalItems = Self.copyPasteboardItems(NSPasteboard.general.pasteboardItems ?? [])
         let originalInput = InputSourceManager.currentInputSourceID()
         let shouldSwitch = originalInput.map { InputSourcePolicy.isCJKInputSource(identifier: $0) } ?? false
-        Logger.log("Text injection begin textLength=\(text.count) insertionLength=\(insertionText.count) target=\(targetApplication.map { Logger.appDescription($0) } ?? "nil") frontmost=\(NSWorkspace.shared.frontmostApplication.map { Logger.appDescription($0) } ?? "nil") pasteboardItems=\(originalItems.count) originalInput=\(originalInput ?? "nil") shouldSwitchInput=\(shouldSwitch)")
+        Logger.log("Text injection begin textLength=\(text.count) insertionLength=\(insertionText.count) target=\(targetApplication.map { Logger.appDescription($0) } ?? "nil") frontmost=\(NSWorkspace.shared.frontmostApplication.map { Logger.appDescription($0) } ?? "nil") copiedPasteboardItems=\(originalItems.count) originalInput=\(originalInput ?? "nil") shouldSwitchInput=\(shouldSwitch)")
 
         if shouldSwitch {
             Logger.log("Switching input source to ASCII before paste")
@@ -62,6 +62,20 @@ public final class TextInjector {
         keyUp.flags = .maskCommand
         keyDown.post(tap: .cghidEventTap)
         keyUp.post(tap: .cghidEventTap)
+    }
+
+    static func copyPasteboardItems(_ items: [NSPasteboardItem]) -> [NSPasteboardItem] {
+        items.map { item in
+            let copy = NSPasteboardItem()
+            for type in item.types {
+                if let data = item.data(forType: type) {
+                    copy.setData(data, forType: type)
+                } else if let string = item.string(forType: type) {
+                    copy.setString(string, forType: type)
+                }
+            }
+            return copy
+        }
     }
 }
 

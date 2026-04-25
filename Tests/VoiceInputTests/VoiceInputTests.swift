@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Testing
 @testable import VoiceInputCore
@@ -81,4 +82,15 @@ import Testing
 @Test func textInjectorAppendsTrailingSpaceToRecognizedText() {
     #expect(TextInjector.textForInsertion("你好") == "你好 ")
     #expect(TextInjector.textForInsertion("hello ") == "hello ")
+}
+
+@Test func pasteboardItemsAreCopiedBeforeRestore() {
+    let item = NSPasteboardItem()
+    item.setString("hello", forType: .string)
+
+    let copies = TextInjector.copyPasteboardItems([item])
+
+    #expect(copies.count == 1)
+    #expect(copies[0] !== item)
+    #expect(copies[0].string(forType: .string) == "hello")
 }
