@@ -2,7 +2,7 @@
 
 A lightweight macOS 14+ menu-bar push-to-talk dictation app.
 
-感谢 [yetone/voice-input-src](https://github.com/yetone/voice-input-src)，本项目基于这个基础上做的功能修改。
+Thanks to [yetone/voice-input-src](https://github.com/yetone/voice-input-src); this project is based on it with feature modifications.
 
 Default engine: **Apple Speech Recognition** (`zh-CN` by default).
 
@@ -34,7 +34,7 @@ Hold **Fn** to record; release to paste the final text into the currently focuse
 
 ## Direct Download / Use
 
-If you only want to try the app directly, download the packaged app archive from the repository root:
+If you only want to try the app directly, download the packaged app archive from [GitHub Releases](https://github.com/perryyeh/macos-voicepinput/releases):
 
 ```text
 VoiceInput.app.zip
@@ -42,9 +42,10 @@ VoiceInput.app.zip
 
 Then:
 
-1. Unzip `VoiceInput.app.zip`.
-2. Move `VoiceInput.app` to `/Applications` or run it from the unzipped folder.
-3. On first run, grant Microphone, Speech Recognition, and Accessibility permissions.
+1. Download `VoiceInput.app.zip` from the latest release.
+2. Unzip it.
+3. Move `VoiceInput.app` to `/Applications` or run it from the unzipped folder.
+4. On first run, grant Microphone, Speech Recognition, and Accessibility permissions.
 
 If macOS Gatekeeper blocks the ad-hoc signed app, right-click `VoiceInput.app` and choose **Open**, or allow it from System Settings → Privacy & Security.
 
