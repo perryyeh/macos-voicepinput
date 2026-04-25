@@ -33,6 +33,7 @@ public final class AppleSpeechRecognizerManager: NSObject, SpeechRecognitionMana
     public override init() {}
 
     public func start(language: RecognitionLanguage) throws {
+        Logger.log("Apple Speech manager start requested language=\(language.rawValue)")
         finalTranscript = ""
         task?.cancel()
         task = nil
@@ -40,11 +41,18 @@ public final class AppleSpeechRecognizerManager: NSObject, SpeechRecognitionMana
         request?.shouldReportPartialResults = true
         recognizer = SFSpeechRecognizer(locale: Locale(identifier: language.rawValue))
 
-        guard let recognizer, recognizer.isAvailable else { throw RecognitionError.recognizerUnavailable }
-        guard SFSpeechRecognizer.authorizationStatus() == .authorized else { throw RecognitionError.authorizationDenied }
+        guard let recognizer, recognizer.isAvailable else {
+            Logger.log("Apple Speech recognizer unavailable language=\(language.rawValue)")
+            throw RecognitionError.recognizerUnavailable
+        }
+        guard SFSpeechRecognizer.authorizationStatus() == .authorized else {
+            Logger.log("Apple Speech authorization denied status=\(SFSpeechRecognizer.authorizationStatus().rawValue)")
+            throw RecognitionError.authorizationDenied
+        }
 
         let inputNode = audioEngine.inputNode
         let format = inputNode.outputFormat(forBus: 0)
+        Logger.log("Apple Speech audio format sampleRate=\(format.sampleRate) channels=\(format.channelCount)")
         let tmp = FileManager.default.temporaryDirectory.appendingPathComponent("voiceinput-\(UUID().uuidString).caf")
         audioFileURL = tmp
         lastAudioFileURL = tmp
@@ -71,9 +79,11 @@ public final class AppleSpeechRecognizerManager: NSObject, SpeechRecognitionMana
 
         audioEngine.prepare()
         try audioEngine.start()
+        Logger.log("Apple Speech audio engine started audioURL=\(tmp.path)")
     }
 
     public func stop(completion: @escaping (String) -> Void) {
+        Logger.log("Apple Speech stop requested isRunning=\(audioEngine.isRunning) finalLength=\(finalTranscript.count)")
         if audioEngine.isRunning {
             audioEngine.stop()
             audioEngine.inputNode.removeTap(onBus: 0)
@@ -82,11 +92,15 @@ public final class AppleSpeechRecognizerManager: NSObject, SpeechRecognitionMana
         audioFile = nil
         let transcript = finalTranscript
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
-            completion(self?.finalTranscript.isEmpty == false ? self!.finalTranscript : transcript)
+            let finalTranscript = self?.finalTranscript ?? ""
+            let final = finalTranscript.isEmpty ? transcript : finalTranscript
+            Logger.log("Apple Speech stop completion transcriptLength=\(final.count)")
+            completion(final)
         }
     }
 
     public func cancel() {
+        Logger.log("Apple Speech cancel requested isRunning=\(audioEngine.isRunning)")
         if audioEngine.isRunning {
             audioEngine.stop()
             audioEngine.inputNode.removeTap(onBus: 0)
@@ -115,8 +129,10 @@ public final class AudioFileRecorder {
     public init() {}
 
     public func start() throws {
+        Logger.log("Audio file recorder start requested")
         let inputNode = audioEngine.inputNode
         let format = inputNode.outputFormat(forBus: 0)
+        Logger.log("Audio file recorder format sampleRate=\(format.sampleRate) channels=\(format.channelCount)")
         let tmp = FileManager.default.temporaryDirectory.appendingPathComponent("voiceinput-\(UUID().uuidString).caf")
         lastAudioFileURL = tmp
         audioFile = try AVAudioFile(forWriting: tmp, settings: format.settings)
@@ -128,9 +144,11 @@ public final class AudioFileRecorder {
         }
         audioEngine.prepare()
         try audioEngine.start()
+        Logger.log("Audio file recorder started audioURL=\(tmp.path)")
     }
 
     public func stop(completion: @escaping (URL?) -> Void) {
+        Logger.log("Audio file recorder stop requested isRunning=\(audioEngine.isRunning) audioURL=\(lastAudioFileURL?.path ?? "nil")")
         if audioEngine.isRunning {
             audioEngine.stop()
             audioEngine.inputNode.removeTap(onBus: 0)
@@ -140,6 +158,7 @@ public final class AudioFileRecorder {
     }
 
     public func cancel() {
+        Logger.log("Audio file recorder cancel requested isRunning=\(audioEngine.isRunning)")
         if audioEngine.isRunning {
             audioEngine.stop()
             audioEngine.inputNode.removeTap(onBus: 0)

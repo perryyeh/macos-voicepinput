@@ -11,26 +11,41 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     public func applicationDidFinishLaunching(_ notification: Notification) {
+        Logger.installCrashLogging()
+        Logger.log("VoiceInput launching \(Logger.diagnosticsSummary())")
         requestInitialPermissions()
         setupStatusItem()
-        hotkeyMonitor.onPressed = { [weak self] in self?.coordinator.startRecording() }
-        hotkeyMonitor.onReleased = { [weak self] in self?.coordinator.stopRecording() }
+        hotkeyMonitor.onPressed = { [weak self] in
+            Logger.log("Hotkey pressed")
+            self?.coordinator.startRecording()
+        }
+        hotkeyMonitor.onReleased = { [weak self] in
+            Logger.log("Hotkey released")
+            self?.coordinator.stopRecording()
+        }
         hotkeyMonitor.start()
         NotificationCenter.default.addObserver(forName: .voiceInputHotkeySettingsChanged, object: nil, queue: .main) { [weak self] _ in
+            Logger.log("Hotkey settings changed; restarting monitor")
             self?.hotkeyMonitor.restart()
         }
         Logger.log("VoiceInput launched")
     }
 
     public func applicationWillTerminate(_ notification: Notification) {
+        Logger.log("VoiceInput terminating")
         hotkeyMonitor.stop()
     }
 
     private func requestInitialPermissions() {
+        Logger.log("Requesting initial permissions before accessibilityTrusted=\(PermissionsHelper.accessibilityTrusted()) speech=\(SFSpeechRecognizer.authorizationStatus().rawValue)")
         PermissionsHelper.requestAccessibilityIfNeeded()
-        AVCaptureDevice.requestAccess(for: .audio) { _ in }
+        AVCaptureDevice.requestAccess(for: .audio) { granted in
+            Logger.log("Microphone permission callback granted=\(granted)")
+        }
         if SFSpeechRecognizer.authorizationStatus() == .notDetermined {
-            SFSpeechRecognizer.requestAuthorization { _ in }
+            SFSpeechRecognizer.requestAuthorization { status in
+                Logger.log("Speech permission callback status=\(status.rawValue)")
+            }
         }
     }
 
@@ -83,6 +98,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         permissions.target = self
         menu.addItem(permissions)
 
+        let logs = NSMenuItem(title: "Open Log Folder", action: #selector(openLogFolder), keyEquivalent: "")
+        logs.target = self
+        menu.addItem(logs)
+
         menu.addItem(NSMenuItem.separator())
         let quit = NSMenuItem(title: "Quit", action: #selector(NSApp.terminate(_:)), keyEquivalent: "q")
         menu.addItem(quit)
@@ -118,13 +137,19 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func showPermissions() {
+        Logger.log("Showing permissions dialog \(Logger.diagnosticsSummary())")
         let alert = NSAlert()
         alert.messageText = "VoiceInput Permissions"
         let access = PermissionsHelper.accessibilityTrusted() ? "✅" : "⚠️"
         let speech = SFSpeechRecognizer.authorizationStatus() == .authorized ? "✅" : "⚠️"
-        alert.informativeText = "\(access) Accessibility\n\(speech) Speech Recognition\n\nVoiceInput needs Accessibility for the global hotkey and simulated paste. Input Monitoring is not required by this build, so it is normal if VoiceInput does not appear there."
+        alert.informativeText = "\(access) Accessibility\n\(speech) Speech Recognition\n\nVoiceInput needs Accessibility for the global hotkey and simulated paste. Input Monitoring is not required by this build, so it is normal if VoiceInput does not appear there.\n\nLog file:\n\(Logger.logFileURL.path)"
         alert.addButton(withTitle: "OK")
         alert.runModal()
+    }
+
+    @objc private func openLogFolder() {
+        Logger.log("Opening log folder at \(Logger.logDirectoryURL.path)")
+        NSWorkspace.shared.open(Logger.logDirectoryURL)
     }
 }
 

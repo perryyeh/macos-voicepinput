@@ -116,6 +116,23 @@ System Settings → Privacy & Security → Accessibility
 
 Input Monitoring is not required by the current build; it is normal if VoiceInput does not appear in the Input Monitoring list.
 
+## Logs and crash reports
+
+VoiceInput writes diagnostic logs to:
+
+```text
+~/Library/Logs/VoiceInput/voiceinput.log
+```
+
+The menu-bar item also has **Open Log Folder**. If the app crashes on another Mac, please copy this log file and the latest macOS crash report if present:
+
+```bash
+cp ~/Library/Logs/VoiceInput/voiceinput.log ~/Desktop/voiceinput.log
+ls -t ~/Library/Logs/DiagnosticReports/VoiceInput*.crash 2>/dev/null | head -1
+```
+
+The app logs lifecycle, permissions, hotkey press/release, selected recognition backend, target app, paste simulation steps, and uncaught `NSException` details. Transcript text is not written to the log by default; only text lengths are logged.
+
 ## mlx-whisper fallback
 
 The fallback expects the existing local helper:

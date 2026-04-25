@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import Security
+import Speech
 
 public final class SettingsStore {
     public static let shared = SettingsStore()
@@ -99,21 +100,63 @@ public enum KeychainStore {
 public enum Logger {
     public static var transcriptLoggingEnabled = false
 
-    public static func log(_ message: String) {
-        let dir = FileManager.default.homeDirectoryForCurrentUser
+    public static var logDirectoryURL: URL {
+        FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/Logs/VoiceInput", isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let file = dir.appendingPathComponent("voiceinput.log")
-        let line = "\(ISO8601DateFormatter().string(from: Date())) \(message)\n"
-        if let data = line.data(using: .utf8) {
-            if FileManager.default.fileExists(atPath: file.path),
-               let handle = try? FileHandle(forWritingTo: file) {
-                handle.seekToEndOfFile()
-                try? handle.write(contentsOf: data)
-                try? handle.close()
-            } else {
-                try? data.write(to: file)
-            }
+    }
+
+    public static var logFileURL: URL {
+        logDirectoryURL.appendingPathComponent("voiceinput.log")
+    }
+
+    public static func log(_ message: String) {
+        try? FileManager.default.createDirectory(at: logDirectoryURL, withIntermediateDirectories: true)
+        let thread = Thread.isMainThread ? "main" : "background"
+        let line = "\(ISO8601DateFormatter().string(from: Date())) pid=\(ProcessInfo.processInfo.processIdentifier) thread=\(thread) \(message)\n"
+        guard let data = line.data(using: .utf8) else { return }
+        if FileManager.default.fileExists(atPath: logFileURL.path),
+           let handle = try? FileHandle(forWritingTo: logFileURL) {
+            handle.seekToEndOfFile()
+            try? handle.write(contentsOf: data)
+            try? handle.close()
+        } else {
+            try? data.write(to: logFileURL)
+        }
+    }
+
+    public static func installCrashLogging() {
+        NSSetUncaughtExceptionHandler { exception in
+            Logger.log("Uncaught NSException name=\(exception.name.rawValue) reason=\(exception.reason ?? "nil") callStack=\(exception.callStackSymbols.joined(separator: " | "))")
+        }
+    }
+
+    public static func diagnosticsSummary() -> String {
+        let bundle = Bundle.main
+        let appPath = bundle.bundlePath
+        let bundleID = bundle.bundleIdentifier ?? "unknown"
+        let version = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
+        let build = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown"
+        let trusted = PermissionsHelper.accessibilityTrusted()
+        let speechStatus = SFSpeechRecognizer.authorizationStatus().debugDescription
+        let frontmost = NSWorkspace.shared.frontmostApplication.map { appDescription($0) } ?? "nil"
+        return "appPath=\(appPath) bundleID=\(bundleID) version=\(version) build=\(build) accessibilityTrusted=\(trusted) speechStatus=\(speechStatus) frontmost=\(frontmost) log=\(logFileURL.path)"
+    }
+
+    public static func appDescription(_ app: NSRunningApplication) -> String {
+        let name = app.localizedName ?? "unknown"
+        let bundleID = app.bundleIdentifier ?? "unknown"
+        return "name=\(name) bundleID=\(bundleID) pid=\(app.processIdentifier) terminated=\(app.isTerminated) active=\(app.isActive)"
+    }
+}
+
+private extension SFSpeechRecognizerAuthorizationStatus {
+    var debugDescription: String {
+        switch self {
+        case .notDetermined: return "notDetermined"
+        case .denied: return "denied"
+        case .restricted: return "restricted"
+        case .authorized: return "authorized"
+        @unknown default: return "unknown(\(rawValue))"
         }
     }
 }

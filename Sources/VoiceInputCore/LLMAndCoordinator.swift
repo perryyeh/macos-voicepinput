@@ -93,10 +93,13 @@ public final class RecognitionCoordinator {
 
     public func startRecording() {
         injectionTargetApplication = NSWorkspace.shared.frontmostApplication
+        Logger.log("Recording start target=\(injectionTargetApplication.map { Logger.appDescription($0) } ?? "nil") settingsEngine=\(settings.recognitionEngine.rawValue) language=\(settings.language.rawValue) accessibilityTrusted=\(PermissionsHelper.accessibilityTrusted())")
         panel.show(text: "Listening…")
         let backends = settings.effectiveRecognitionBackends
+        Logger.log("Recording backends=\(backends.map(\.rawValue).joined(separator: ","))")
         activeBackends = backends
         guard let first = backends.first else {
+            Logger.log("Recording start aborted: no recognition backends")
             panel.updateText("No local engine available")
             return
         }
@@ -104,12 +107,14 @@ public final class RecognitionCoordinator {
         case .appleSpeech:
             requestSpeechAuthorizationIfNeeded { [weak self] ok in
                 guard let self else { return }
+                Logger.log("Speech authorization checked ok=\(ok)")
                 guard ok else {
                     self.panel.updateText("Speech permission needed")
                     return
                 }
                 do {
                     try self.appleSpeech.start(language: self.settings.language)
+                    Logger.log("Apple Speech started")
                 } catch {
                     Logger.log("Apple Speech start failed: \(error)")
                     self.panel.updateText("Apple Speech unavailable")
@@ -125,6 +130,7 @@ public final class RecognitionCoordinator {
     }
 
     public func stopRecording() {
+        Logger.log("Recording stop requested activeBackends=\(activeBackends.map(\.rawValue).joined(separator: ",")) target=\(injectionTargetApplication.map { Logger.appDescription($0) } ?? "nil")")
         panel.updateText("Transcribing…")
         let backends = activeBackends
         guard let first = backends.first else {
@@ -153,6 +159,7 @@ public final class RecognitionCoordinator {
     }
 
     public func cancel() {
+        Logger.log("Recording cancelled")
         appleSpeech.cancel()
         audioRecorder.cancel()
         panel.hideAnimated()
@@ -160,7 +167,9 @@ public final class RecognitionCoordinator {
 
     private func tryRecorderFallbackStart() {
         do {
+            Logger.log("Recorder fallback start requested")
             try audioRecorder.start()
+            Logger.log("Recorder fallback started audioURL=\(audioRecorder.lastAudioFileURL?.path ?? "nil")")
         } catch {
             Logger.log("Audio recorder start failed: \(error)")
             panel.updateText("Microphone unavailable")
@@ -168,6 +177,7 @@ public final class RecognitionCoordinator {
     }
 
     private func tryFallbacks(audioURL: URL?, remainingBackends: [RecognitionBackend]) {
+        Logger.log("Trying fallbacks audioURL=\(audioURL?.path ?? "nil") remaining=\(remainingBackends.map(\.rawValue).joined(separator: ","))")
         guard let audioURL else {
             finish("")
             return
@@ -200,6 +210,7 @@ public final class RecognitionCoordinator {
 
     private func finish(_ raw: String) {
         let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        Logger.log("Finish recognition rawLength=\(raw.count) trimmedLength=\(text.count) hasText=\(!text.isEmpty)")
         guard !text.isEmpty else {
             panel.updateText("No speech detected")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { self.panel.hideAnimated() }
@@ -208,16 +219,19 @@ public final class RecognitionCoordinator {
         let current = SettingsStore.shared.settings
         let config = SettingsStore.shared.llmConfiguration
         if config.isComplete {
+            Logger.log("LLM refinement enabled timeout=\(current.llmTimeoutSeconds) model=\(config.model) baseURL=\(config.apiBaseURL)")
             panel.updateText("Refining…")
             llm.refine(text: text, config: config, timeout: current.llmTimeoutSeconds) { [weak self] refined in
                 self?.injectAndHide(refined)
             }
         } else {
+            Logger.log("LLM refinement skipped; config incomplete")
             injectAndHide(text)
         }
     }
 
     private func injectAndHide(_ text: String) {
+        Logger.log("Inject and hide textLength=\(text.count) target=\(injectionTargetApplication.map { Logger.appDescription($0) } ?? "nil")")
         panel.updateText(text)
         injector.inject(text, targetApplication: injectionTargetApplication)
         injectionTargetApplication = nil

@@ -9,28 +9,43 @@ public final class TextInjector {
     }
 
     public func inject(_ text: String, targetApplication: NSRunningApplication? = nil) {
-        guard !text.isEmpty else { return }
+        guard !text.isEmpty else {
+            Logger.log("Text injection skipped: empty text")
+            return
+        }
         let insertionText = Self.textForInsertion(text)
         let originalItems = NSPasteboard.general.pasteboardItems ?? []
         let originalInput = InputSourceManager.currentInputSourceID()
         let shouldSwitch = originalInput.map { InputSourcePolicy.isCJKInputSource(identifier: $0) } ?? false
+        Logger.log("Text injection begin textLength=\(text.count) insertionLength=\(insertionText.count) target=\(targetApplication.map { Logger.appDescription($0) } ?? "nil") frontmost=\(NSWorkspace.shared.frontmostApplication.map { Logger.appDescription($0) } ?? "nil") pasteboardItems=\(originalItems.count) originalInput=\(originalInput ?? "nil") shouldSwitchInput=\(shouldSwitch)")
 
-        if shouldSwitch { InputSourceManager.selectASCIIInputSource() }
+        if shouldSwitch {
+            Logger.log("Switching input source to ASCII before paste")
+            InputSourceManager.selectASCIIInputSource()
+        }
 
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(insertionText, forType: .string)
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
             if let targetApplication, !targetApplication.isTerminated {
+                Logger.log("Activating paste target before Cmd+V target=\(Logger.appDescription(targetApplication))")
                 targetApplication.activate(options: [])
+            } else {
+                Logger.log("Paste target missing or terminated; using current frontmost=\(NSWorkspace.shared.frontmostApplication.map { Logger.appDescription($0) } ?? "nil")")
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+                Logger.log("Posting Cmd+V frontmost=\(NSWorkspace.shared.frontmostApplication.map { Logger.appDescription($0) } ?? "nil")")
                 Self.sendCommandV()
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                if shouldSwitch, let originalInput { InputSourceManager.selectInputSource(identifier: originalInput) }
+                if shouldSwitch, let originalInput {
+                    Logger.log("Restoring input source originalInput=\(originalInput)")
+                    InputSourceManager.selectInputSource(identifier: originalInput)
+                }
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.writeObjects(originalItems)
+                Logger.log("Text injection cleanup completed restoredPasteboardItems=\(originalItems.count)")
             }
         }
     }
@@ -39,10 +54,14 @@ public final class TextInjector {
         let source = CGEventSource(stateID: .hidSystemState)
         let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: true)
         let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: false)
-        keyDown?.flags = .maskCommand
-        keyUp?.flags = .maskCommand
-        keyDown?.post(tap: .cghidEventTap)
-        keyUp?.post(tap: .cghidEventTap)
+        guard let keyDown, let keyUp else {
+            Logger.log("Failed to create Cmd+V CGEvents")
+            return
+        }
+        keyDown.flags = .maskCommand
+        keyUp.flags = .maskCommand
+        keyDown.post(tap: .cghidEventTap)
+        keyUp.post(tap: .cghidEventTap)
     }
 }
 
