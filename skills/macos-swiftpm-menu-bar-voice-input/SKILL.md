@@ -157,6 +157,74 @@ Input Monitoring:
 
 If the app is not listed under Accessibility, instruct the user to add the built `.app` manually with the `+` button.
 
+## Migrating a Scratch VoiceInput Project Into a New GitHub Repo
+
+When the app was first developed in a local scratch directory and the user later creates a real GitHub repo, use this safe sequence:
+
+1. Clone the new repo into the desired final directory, usually under `/Users/yeh/code/`:
+
+```bash
+cd /Users/yeh/code
+git clone git@github.com:OWNER/REPO.git macos-voiceinput
+```
+
+2. Copy the scratch project into the clone with `rsync`, excluding transient/build artifacts and the old `.git` directory:
+
+```bash
+rsync -a --delete \
+  --exclude='.git/' \
+  --exclude='.build/' \
+  --exclude='VoiceInput.app/' \
+  /Users/yeh/code/voiceinput/ /Users/yeh/code/macos-voiceinput/
+```
+
+3. If the new GitHub repo was initialized with files such as `LICENSE` and `rsync --delete` removed them, restore intentionally kept tracked files before committing:
+
+```bash
+cd /Users/yeh/code/macos-voiceinput
+git checkout -- LICENSE  # only if desired and tracked
+```
+
+4. Copy this skill into the repo if the user asks to keep project-specific procedural knowledge with the source:
+
+```bash
+mkdir -p skills/macos-swiftpm-menu-bar-voice-input
+cp ~/.hermes/skills/apple/macos-swiftpm-menu-bar-voice-input/SKILL.md \
+  skills/macos-swiftpm-menu-bar-voice-input/SKILL.md
+```
+
+5. Verify before commit/push:
+
+```bash
+make test && make build
+git status --short
+```
+
+6. Commit and push, then confirm local and remote state:
+
+```bash
+git add .
+git commit -m "Initial macOS voice input app"
+git push -u origin main
+git status --short --branch
+git log --oneline -1
+git ls-remote --heads origin main
+```
+
+7. Only after successful push and final sanity checks, remove the old scratch directory if explicitly requested:
+
+```bash
+test -d /Users/yeh/code/macos-voiceinput
+test -f /Users/yeh/code/macos-voiceinput/Package.swift
+rm -rf /Users/yeh/code/voiceinput
+```
+
+Pitfalls:
+
+- `rsync --delete` can remove tracked files from the newly initialized repo; inspect `git status --short` and restore files like `LICENSE` if they should be preserved.
+- A `git push` can time out locally after the commit succeeds; check `git status --short --branch` and `git ls-remote --heads origin main`, then retry `GIT_TERMINAL_PROMPT=0 git push -u origin main` if local is still ahead.
+- Do not delete the scratch directory until tests/build pass and the commit is confirmed pushed.
+
 ## Verification Commands
 
 From the project root:
@@ -181,6 +249,17 @@ Verify bundle resources and signing when app icon/resources change:
 test -f VoiceInput.app/Contents/Resources/AppIcon.icns
 codesign --verify --deep --strict VoiceInput.app
 ```
+
+If the user wants a directly downloadable app artifact in the repository root, keep `VoiceInput.app/` ignored as a build product and commit a zip archive instead:
+
+```bash
+make build
+rm -f VoiceInput.app.zip
+ditto -c -k --sequesterRsrc --keepParent VoiceInput.app VoiceInput.app.zip
+unzip -t VoiceInput.app.zip
+```
+
+Document direct use in README: download `VoiceInput.app.zip`, unzip it, move or run `VoiceInput.app`, grant Microphone/Speech Recognition/Accessibility permissions, and if Gatekeeper blocks the ad-hoc signed app, right-click → Open or allow it from System Settings → Privacy & Security.
 
 ## Pitfalls
 
