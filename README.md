@@ -34,9 +34,21 @@ Hold **Fn** to record; release to paste the final text into the currently focuse
 - LLM timeout defaults to 2.5s and falls back to original transcript on error/timeout.
 - Logs to `~/Library/Logs/VoiceIME/voiceime.log` without transcript contents by default.
 
+## Recommended: Build Locally
+
+For personal use, the recommended path is to build the app from source on your own Mac:
+
+```bash
+make test
+make build
+make install
+```
+
+This produces and installs `/Applications/VoiceIME.app` from the checked-out code.
+
 ## Direct Download / Use
 
-If you only want to try the app directly, download the packaged app archive from
+If you do not want to build locally, download the packaged app archive from
 the [GitHub Releases](https://github.com/perryyeh/voiceime/releases)
 page.
 
@@ -47,7 +59,12 @@ Then:
 3. Move `VoiceIME.app` to `/Applications` or run it from the unzipped folder.
 4. On first run, grant Microphone, Speech Recognition, and Accessibility permissions.
 
-If macOS Gatekeeper blocks the ad-hoc signed app, right-click `VoiceIME.app` and choose **Open**, or allow it from System Settings → Privacy & Security.
+Release downloads are currently ad-hoc signed, not Developer ID signed or notarized. If macOS shows **“Apple could not verify VoiceIME.app is free of malware…”**, allow the downloaded app with:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/VoiceIME.app
+open /Applications/VoiceIME.app
+```
 
 ### Upgrading from an older build
 
