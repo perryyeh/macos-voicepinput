@@ -12,7 +12,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
 
     public func applicationDidFinishLaunching(_ notification: Notification) {
         Logger.installCrashLogging()
-        Logger.log("VoiceInput launching \(Logger.diagnosticsSummary())")
+        Logger.log("VoiceIME launching \(Logger.diagnosticsSummary())")
         requestInitialPermissions()
         setupStatusItem()
         hotkeyMonitor.onPressed = { [weak self] in
@@ -24,15 +24,15 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.coordinator.stopRecording()
         }
         hotkeyMonitor.start()
-        NotificationCenter.default.addObserver(forName: .voiceInputHotkeySettingsChanged, object: nil, queue: .main) { [weak self] _ in
+        NotificationCenter.default.addObserver(forName: .voiceIMEHotkeySettingsChanged, object: nil, queue: .main) { [weak self] _ in
             Logger.log("Hotkey settings changed; restarting monitor")
             self?.hotkeyMonitor.restart()
         }
-        Logger.log("VoiceInput launched")
+        Logger.log("VoiceIME launched")
     }
 
     public func applicationWillTerminate(_ notification: Notification) {
-        Logger.log("VoiceInput terminating")
+        Logger.log("VoiceIME terminating")
         hotkeyMonitor.stop()
     }
 
@@ -139,10 +139,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func showPermissions() {
         Logger.log("Showing permissions dialog \(Logger.diagnosticsSummary())")
         let alert = NSAlert()
-        alert.messageText = "VoiceInput Permissions"
+        alert.messageText = "VoiceIME Permissions"
         let access = PermissionsHelper.accessibilityTrusted() ? "✅" : "⚠️"
         let speech = SFSpeechRecognizer.authorizationStatus() == .authorized ? "✅" : "⚠️"
-        alert.informativeText = "\(access) Accessibility\n\(speech) Speech Recognition\n\nVoiceInput needs Accessibility for the global hotkey and simulated paste. Input Monitoring is not required by this build, so it is normal if VoiceInput does not appear there.\n\nLog file:\n\(Logger.logFileURL.path)"
+        alert.informativeText = "\(access) Accessibility\n\(speech) Speech Recognition\n\nVoiceIME needs Accessibility for the global hotkey and simulated paste. Input Monitoring is not required by this build, so it is normal if VoiceIME does not appear there.\n\nLog file:\n\(Logger.logFileURL.path)"
         alert.addButton(withTitle: "OK")
         alert.runModal()
     }
@@ -215,7 +215,7 @@ public final class HotkeySettingsWindowController: NSWindowController {
         var settings = SettingsStore.shared.settings
         settings.hotkeySettings = HotkeySettings(trigger: trigger)
         SettingsStore.shared.settings = settings
-        NotificationCenter.default.post(name: .voiceInputHotkeySettingsChanged, object: nil)
+        NotificationCenter.default.post(name: .voiceIMEHotkeySettingsChanged, object: nil)
         status.stringValue = "Saved: \(trigger.displayName)"
     }
 }

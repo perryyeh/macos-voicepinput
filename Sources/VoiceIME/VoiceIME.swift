@@ -1,5 +1,5 @@
 import AppKit
-import VoiceInputCore
+import VoiceIMECore
 
 let app = NSApplication.shared
 app.setActivationPolicy(.accessory)

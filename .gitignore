@@ -6,6 +6,6 @@ DerivedData/
 .swiftpm/configuration/registries.json
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
-VoiceInput.app/
-VoiceInput.app.zip
+VoiceIME.app/
+VoiceIME.app.zip
 dist/

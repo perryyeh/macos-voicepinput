@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 import Testing
-@testable import VoiceInputCore
+@testable import VoiceIMECore
 
 @Test func conservativeRefinementPromptRejectsRewriting() {
     let prompt = LLMRefinementPrompt.systemPrompt

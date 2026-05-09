@@ -53,7 +53,7 @@ public final class AppleSpeechRecognizerManager: NSObject, SpeechRecognitionMana
         let inputNode = audioEngine.inputNode
         let format = inputNode.outputFormat(forBus: 0)
         Logger.log("Apple Speech audio format sampleRate=\(format.sampleRate) channels=\(format.channelCount)")
-        let tmp = FileManager.default.temporaryDirectory.appendingPathComponent("voiceinput-\(UUID().uuidString).caf")
+        let tmp = FileManager.default.temporaryDirectory.appendingPathComponent("voiceime-\(UUID().uuidString).caf")
         audioFileURL = tmp
         lastAudioFileURL = tmp
         audioFile = try? AVAudioFile(forWriting: tmp, settings: format.settings)
@@ -133,7 +133,7 @@ public final class AudioFileRecorder {
         let inputNode = audioEngine.inputNode
         let format = inputNode.outputFormat(forBus: 0)
         Logger.log("Audio file recorder format sampleRate=\(format.sampleRate) channels=\(format.channelCount)")
-        let tmp = FileManager.default.temporaryDirectory.appendingPathComponent("voiceinput-\(UUID().uuidString).caf")
+        let tmp = FileManager.default.temporaryDirectory.appendingPathComponent("voiceime-\(UUID().uuidString).caf")
         lastAudioFileURL = tmp
         audioFile = try AVAudioFile(forWriting: tmp, settings: format.settings)
         inputNode.removeTap(onBus: 0)

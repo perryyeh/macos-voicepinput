@@ -2,15 +2,15 @@
 import PackageDescription
 
 let package = Package(
-    name: "VoiceInput",
+    name: "VoiceIME",
     platforms: [.macOS(.v14)],
     products: [
-        .library(name: "VoiceInputCore", targets: ["VoiceInputCore"]),
-        .executable(name: "VoiceInput", targets: ["VoiceInput"]),
+        .library(name: "VoiceIMECore", targets: ["VoiceIMECore"]),
+        .executable(name: "VoiceIME", targets: ["VoiceIME"]),
     ],
     targets: [
-        .target(name: "VoiceInputCore", path: "Sources/VoiceInputCore"),
-        .executableTarget(name: "VoiceInput", dependencies: ["VoiceInputCore"], path: "Sources/VoiceInput"),
-        .testTarget(name: "VoiceInputTests", dependencies: ["VoiceInputCore"]),
+        .target(name: "VoiceIMECore", path: "Sources/VoiceIMECore"),
+        .executableTarget(name: "VoiceIME", dependencies: ["VoiceIMECore"], path: "Sources/VoiceIME"),
+        .testTarget(name: "VoiceIMETests", dependencies: ["VoiceIMECore"]),
     ]
 )

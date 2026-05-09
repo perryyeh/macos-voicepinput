@@ -56,7 +56,7 @@ public final class SettingsStore {
 }
 
 public enum KeychainStore {
-    static let service = "local.voiceinput.app"
+    static let service = "local.voiceime.app"
 
     @discardableResult
     public static func save(_ value: String, account: String) -> Bool {
@@ -102,11 +102,11 @@ public enum Logger {
 
     public static var logDirectoryURL: URL {
         FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Logs/VoiceInput", isDirectory: true)
+            .appendingPathComponent("Library/Logs/VoiceIME", isDirectory: true)
     }
 
     public static var logFileURL: URL {
-        logDirectoryURL.appendingPathComponent("voiceinput.log")
+        logDirectoryURL.appendingPathComponent("voiceime.log")
     }
 
     public static func log(_ message: String) {

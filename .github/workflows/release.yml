@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag to publish, for example v0.1.0'
+        description: 'Release tag to publish, for example v0.2'
         required: true
         type: string
 
@@ -42,8 +42,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.release_tag.outputs.tag }}
         run: |
-          gh release create "$TAG" dist/VoiceInput.app.zip \
+          gh release create "$TAG" dist/VoiceIME.app.zip \
             --repo "$GITHUB_REPOSITORY" \
             --title "$TAG" \
-            --notes "Packaged macOS app archive. Download VoiceInput.app.zip, unzip it, then run VoiceInput.app." \
+            --notes "Packaged macOS app archive. Download VoiceIME.app.zip, unzip it, then run VoiceIME.app." \
             --verify-tag

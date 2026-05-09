@@ -1,4 +1,4 @@
-# VoiceInput
+# VoiceIME for MacOS
 
 A lightweight macOS 14+ menu-bar push-to-talk dictation app.
 
@@ -17,7 +17,7 @@ Optional **OpenAI-compatible LLM refinement** conservatively fixes only obvious 
 
 Hold **Fn** to record; release to paste the final text into the currently focused input field. Use **Hotkey Settings…** to change the push-to-talk shortcut.
 
-![VoiceInput menu bar screenshot](docs/images/voiceinput-menu.jpg)
+![VoiceIME menu bar screenshot](docs/images/voiceime-menu.jpg)
 
 ## Features
 
@@ -32,7 +32,7 @@ Hold **Fn** to record; release to paste the final text into the currently focuse
 - Hotkey Settings window: Fn, Right Option, Control + Space, or Command + Shift + Space. Fn is selected by default.
 - API key stored in macOS Keychain; clearing the field deletes it from Keychain.
 - LLM timeout defaults to 2.5s and falls back to original transcript on error/timeout.
-- Logs to `~/Library/Logs/VoiceInput/voiceinput.log` without transcript contents by default.
+- Logs to `~/Library/Logs/VoiceIME/voiceime.log` without transcript contents by default.
 
 ## Direct Download / Use
 
@@ -42,35 +42,35 @@ page.
 
 Then:
 
-1. Download `VoiceInput.app.zip` from the latest release.
+1. Download `VoiceIME.app.zip` from the latest release.
 2. Unzip it.
-3. Move `VoiceInput.app` to `/Applications` or run it from the unzipped folder.
+3. Move `VoiceIME.app` to `/Applications` or run it from the unzipped folder.
 4. On first run, grant Microphone, Speech Recognition, and Accessibility permissions.
 
-If macOS Gatekeeper blocks the ad-hoc signed app, right-click `VoiceInput.app` and choose **Open**, or allow it from System Settings → Privacy & Security.
+If macOS Gatekeeper blocks the ad-hoc signed app, right-click `VoiceIME.app` and choose **Open**, or allow it from System Settings → Privacy & Security.
 
 ### Upgrading from an older build
 
-Use one stable app location, preferably `/Applications/VoiceInput.app`. Before replacing an older copy, quit the running app:
+Use one stable app location, preferably `/Applications/VoiceIME.app`. Before replacing an older copy, quit the running app:
 
 ```bash
-pkill -x VoiceInput || true
+pkill -x VoiceIME || true
 ```
 
 Then replace the app bundle and open the new copy from the same path:
 
 ```bash
-open /Applications/VoiceInput.app
+open /Applications/VoiceIME.app
 ```
 
-If Accessibility still shows VoiceInput as enabled in System Settings but the app reports that Accessibility is not trusted, the macOS TCC permission record is probably stale. This can happen with ad-hoc signed builds because every new build may have a different code hash, so the old Accessibility entry can remain visible while no longer matching the current app.
+If Accessibility still shows VoiceIME as enabled in System Settings but the app reports that Accessibility is not trusted, the macOS TCC permission record is probably stale. This can happen with ad-hoc signed builds because every new build may have a different code hash, so the old Accessibility entry can remain visible while no longer matching the current app.
 
-Reset only VoiceInput's Accessibility permission and grant it again:
+Reset only VoiceIME's Accessibility permission and grant it again:
 
 ```bash
-pkill -x VoiceInput || true
-tccutil reset Accessibility local.voiceinput.app
-open /Applications/VoiceInput.app
+pkill -x VoiceIME || true
+tccutil reset Accessibility local.voiceime.app
+open /Applications/VoiceIME.app
 ```
 
 Then open:
@@ -79,7 +79,7 @@ Then open:
 System Settings → Privacy & Security → Accessibility
 ```
 
-Remove any old `VoiceInput` entries if present, add the current `/Applications/VoiceInput.app`, and turn it on again. Avoid keeping multiple copies such as both `~/Downloads/VoiceInput.app` and `/Applications/VoiceInput.app`, because macOS can show one copy as authorized while the running copy is a different app path/signature.
+Remove any old `VoiceIME` entries if present, add the current `/Applications/VoiceIME.app`, and turn it on again. Avoid keeping multiple copies such as both `~/Downloads/VoiceIME.app` and `/Applications/VoiceIME.app`, because macOS can show one copy as authorized while the running copy is a different app path/signature.
 
 ### Signing and notarization status
 
@@ -116,21 +116,21 @@ If Fn detection or paste does not work, open:
 System Settings → Privacy & Security → Accessibility
 ```
 
-Input Monitoring is not required by the current build; it is normal if VoiceInput does not appear in the Input Monitoring list.
+Input Monitoring is not required by the current build; it is normal if VoiceIME does not appear in the Input Monitoring list.
 
 ## Logs and crash reports
 
-VoiceInput writes diagnostic logs to:
+VoiceIME writes diagnostic logs to:
 
 ```text
-~/Library/Logs/VoiceInput/voiceinput.log
+~/Library/Logs/VoiceIME/voiceime.log
 ```
 
 The menu-bar item also has **Open Log Folder**. If the app crashes on another Mac, please copy this log file and the latest macOS crash report if present:
 
 ```bash
-cp ~/Library/Logs/VoiceInput/voiceinput.log ~/Desktop/voiceinput.log
-ls -t ~/Library/Logs/DiagnosticReports/VoiceInput*.crash 2>/dev/null | head -1
+cp ~/Library/Logs/VoiceIME/voiceime.log ~/Desktop/voiceime.log
+ls -t ~/Library/Logs/DiagnosticReports/VoiceIME*.crash 2>/dev/null | head -1
 ```
 
 The app logs lifecycle, permissions, hotkey press/release, selected recognition backend, target app, paste simulation steps, and uncaught `NSException` details. Transcript text is not written to the log by default; only text lengths are logged.

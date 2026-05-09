@@ -108,7 +108,7 @@ public enum InputSourceManager {
 }
 
 public extension Notification.Name {
-    static let voiceInputHotkeySettingsChanged = Notification.Name("VoiceInputHotkeySettingsChanged")
+    static let voiceIMEHotkeySettingsChanged = Notification.Name("VoiceIMEHotkeySettingsChanged")
 }
 
 public final class HotkeyMonitor {

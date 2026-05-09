@@ -1,5 +1,5 @@
 ---
-name: macos-swiftpm-menu-bar-voice-input
+name: macos-swiftpm-menu-bar-voice-ime
 description: Build and iterate on a macOS SwiftPM menu-bar push-to-talk voice input app using Apple Speech, optional Local mlx-whisper, optional External LLM, configurable hotkeys, and clipboard text injection.
 version: 1.0.0
 author: Hermes Agent
@@ -9,7 +9,7 @@ metadata:
     tags: [macos, swiftpm, speech, apple-speech, mlx-whisper, menu-bar, accessibility, privacy]
 ---
 
-# macOS SwiftPM Menu-Bar Voice Input App
+# macOS SwiftPM Menu-Bar Voice IME App
 
 Use this when creating or modifying a lightweight macOS voice input / dictation utility built with Swift Package Manager, especially one that records while a hotkey is held, transcribes speech, optionally refines text with an LLM, then inserts text into the focused app.
 
@@ -157,7 +157,7 @@ Input Monitoring:
 
 If the app is not listed under Accessibility, instruct the user to add the built `.app` manually with the `+` button.
 
-## Migrating a Scratch VoiceInput Project Into a New GitHub Repo
+## Migrating a Scratch VoiceIME Project Into a New GitHub Repo
 
 When the app was first developed in a local scratch directory and the user later creates a real GitHub repo, use this safe sequence:
 
@@ -165,7 +165,7 @@ When the app was first developed in a local scratch directory and the user later
 
 ```bash
 cd /Users/yeh/code
-git clone git@github.com:OWNER/REPO.git macos-voiceinput
+git clone git@github.com:OWNER/REPO.git macos-voiceime
 ```
 
 2. Copy the scratch project into the clone with `rsync`, excluding transient/build artifacts and the old `.git` directory:
@@ -174,23 +174,23 @@ git clone git@github.com:OWNER/REPO.git macos-voiceinput
 rsync -a --delete \
   --exclude='.git/' \
   --exclude='.build/' \
-  --exclude='VoiceInput.app/' \
-  /Users/yeh/code/voiceinput/ /Users/yeh/code/macos-voiceinput/
+  --exclude='VoiceIME.app/' \
+  /Users/yeh/code/voiceime/ /Users/yeh/code/macos-voiceime/
 ```
 
 3. If the new GitHub repo was initialized with files such as `LICENSE` and `rsync --delete` removed them, restore intentionally kept tracked files before committing:
 
 ```bash
-cd /Users/yeh/code/macos-voiceinput
+cd /Users/yeh/code/macos-voiceime
 git checkout -- LICENSE  # only if desired and tracked
 ```
 
 4. Copy this skill into the repo if the user asks to keep project-specific procedural knowledge with the source:
 
 ```bash
-mkdir -p skills/macos-swiftpm-menu-bar-voice-input
-cp ~/.hermes/skills/apple/macos-swiftpm-menu-bar-voice-input/SKILL.md \
-  skills/macos-swiftpm-menu-bar-voice-input/SKILL.md
+mkdir -p skills/macos-swiftpm-menu-bar-voice-ime
+cp ~/.hermes/skills/apple/macos-swiftpm-menu-bar-voice-ime/SKILL.md \
+  skills/macos-swiftpm-menu-bar-voice-ime/SKILL.md
 ```
 
 5. Verify before commit/push:
@@ -214,9 +214,9 @@ git ls-remote --heads origin main
 7. Only after successful push and final sanity checks, remove the old scratch directory if explicitly requested:
 
 ```bash
-test -d /Users/yeh/code/macos-voiceinput
-test -f /Users/yeh/code/macos-voiceinput/Package.swift
-rm -rf /Users/yeh/code/voiceinput
+test -d /Users/yeh/code/macos-voiceime
+test -f /Users/yeh/code/macos-voiceime/Package.swift
+rm -rf /Users/yeh/code/voiceime
 ```
 
 Pitfalls:
@@ -245,21 +245,21 @@ swift -e 'import Speech; let r = SFSpeechRecognizer(locale: Locale(identifier: "
 Verify bundle resources and signing when app icon/resources change:
 
 ```bash
-/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' VoiceInput.app/Contents/Info.plist
-test -f VoiceInput.app/Contents/Resources/AppIcon.icns
-codesign --verify --deep --strict VoiceInput.app
+/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' VoiceIME.app/Contents/Info.plist
+test -f VoiceIME.app/Contents/Resources/AppIcon.icns
+codesign --verify --deep --strict VoiceIME.app
 ```
 
-If the user wants a directly downloadable app artifact in the repository root, keep `VoiceInput.app/` ignored as a build product and commit a zip archive instead:
+If the user wants a directly downloadable app artifact in the repository root, keep `VoiceIME.app/` ignored as a build product and commit a zip archive instead:
 
 ```bash
 make build
-rm -f VoiceInput.app.zip
-ditto -c -k --sequesterRsrc --keepParent VoiceInput.app VoiceInput.app.zip
-unzip -t VoiceInput.app.zip
+rm -f VoiceIME.app.zip
+ditto -c -k --sequesterRsrc --keepParent VoiceIME.app VoiceIME.app.zip
+unzip -t VoiceIME.app.zip
 ```
 
-Document direct use in README: download `VoiceInput.app.zip`, unzip it, move or run `VoiceInput.app`, grant Microphone/Speech Recognition/Accessibility permissions, and if Gatekeeper blocks the ad-hoc signed app, right-click → Open or allow it from System Settings → Privacy & Security.
+Document direct use in README: download `VoiceIME.app.zip`, unzip it, move or run `VoiceIME.app`, grant Microphone/Speech Recognition/Accessibility permissions, and if Gatekeeper blocks the ad-hoc signed app, right-click → Open or allow it from System Settings → Privacy & Security.
 
 ## Pitfalls
 
