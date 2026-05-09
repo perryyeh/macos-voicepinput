@@ -37,7 +37,7 @@ Hold **Fn** to record; release to paste the final text into the currently focuse
 ## Direct Download / Use
 
 If you only want to try the app directly, download the packaged app archive from
-the [GitHub Releases](https://github.com/perryyeh/macos-voicepinput/releases)
+the [GitHub Releases](https://github.com/perryyeh/voiceime/releases)
 page.
 
 Then:
