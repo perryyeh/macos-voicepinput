@@ -166,7 +166,7 @@ public final class HotkeyMonitor {
         let keyCode = Int(event.getIntegerValueField(.keyboardEventKeycode))
         switch SettingsStore.shared.settings.hotkeySettings.trigger {
         case .functionKey:
-            handleModifierKey(type: type, keyCode: keyCode, targetKeyCode: 63, requiredFlag: .maskSecondaryFn, flags: flags)
+            handleFunctionKey(type: type, flags: flags)
         case .rightOption:
             handleModifierKey(type: type, keyCode: keyCode, targetKeyCode: 61, requiredFlag: .maskAlternate, flags: flags)
         case .controlSpace:
@@ -175,6 +175,16 @@ public final class HotkeyMonitor {
             handleShortcut(type: type, keyCode: keyCode, requiredFlags: [.maskCommand, .maskShift], flags: flags)
         }
         return Unmanaged.passUnretained(event)
+    }
+
+    public static func functionKeyPressed(type: CGEventType, flags: CGEventFlags) -> Bool? {
+        guard type == .flagsChanged else { return nil }
+        return flags.contains(.maskSecondaryFn)
+    }
+
+    private func handleFunctionKey(type: CGEventType, flags: CGEventFlags) {
+        guard let pressed = Self.functionKeyPressed(type: type, flags: flags) else { return }
+        setPressed(pressed)
     }
 
     private func handleModifierKey(type: CGEventType, keyCode: Int, targetKeyCode: Int, requiredFlag: CGEventFlags, flags: CGEventFlags) {

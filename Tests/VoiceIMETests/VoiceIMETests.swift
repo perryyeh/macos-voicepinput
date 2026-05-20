@@ -72,6 +72,12 @@ import Testing
     #expect(HotkeyTrigger.allCases.map(\.displayName) == ["Fn", "Right Option", "Control + Space", "Command + Shift + Space"])
 }
 
+@Test func functionKeyDetectionUsesFnFlagNotHardwareKeyCode() {
+    #expect(HotkeyMonitor.functionKeyPressed(type: .flagsChanged, flags: [.maskSecondaryFn]) == true)
+    #expect(HotkeyMonitor.functionKeyPressed(type: .flagsChanged, flags: []) == false)
+    #expect(HotkeyMonitor.functionKeyPressed(type: .keyDown, flags: [.maskSecondaryFn]) == nil)
+}
+
 @Test func llmConfigRequiresBaseKeyAndModel() {
     var config = LLMConfiguration(apiBaseURL: "https://api.example.com/v1", apiKey: "", model: "gpt-test")
     #expect(!config.isComplete)
